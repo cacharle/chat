@@ -1,0 +1,35 @@
+body {
+    background: grey;
+}
+
+ul {
+    list-style-type: none;
+}
+
+#messages {
+    padding: 0;
+}
+
+#messages li {
+    display: flex;
+}
+
+.author {
+    margin-right: 15px;
+}
+
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+#button-send {
+    width: 5em;
+    font-weight: bold;
+}
+
+#input-message {
+    width: 70%;
+}
