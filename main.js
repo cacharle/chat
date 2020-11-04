@@ -1,59 +1,81 @@
 const path = require("path")
 
-// const ent = require("ent")
+const ent = require("ent")
 
 const express = require("express")
-const app = express()
-const http = require("http").createServer(app)
+const app     = express()
+const server  = require("http").createServer(app)
+const session = require("express-session")
 
-const cookieSession = require("cookie-session")
-const socketSession = require("express-socket.io-session")
-
-const io = require("socket.io")(http)
+const io = require("socket.io")(server)
 
 const MongoClient = require("mongodb").MongoClient;
+const assert = require("assert")
 
-let db = MongoClient.connect("mongodb://localhost:27017/chat", (err, _) => {
-    assert(err, null)
-    console.log("Connected to db")
-})
+const mongoURI = "mongodb://localhost:27017"
+// const client = new MongoClient(mongoURI)
+
+let dbPromise = MongoClient.connect(mongoURI)
+// console.log(">>", dbPromise)
+// dbPromise.then(db => console.log(">>", db.db("chat").collection("messages")))
+
 
 app.use(express.static(path.join(__dirname, "static")))
-app.use(express.urlencoded({ extended: true })
-app.use(cookieSession({secret: "session-secret"}))
-io.use(socketSession(cookieSession))
+// app.use(express.urlencoded({ extended: true }))
+const sessionParser = session({
+    secret: "bonjour",
+    resave: true,
+    saveUninitialized: true
+})
+app.use(sessionParser)
 
 app.get("/", (req, res) => {
-    res.sendfile(path.join(__dirname, "/index.html"))
+    req.session.username = "user"
+    res.sendFile(path.join(__dirname, "/index.html"))
 })
 
-app.post("/", (req, res) => {
-    if (req.method !== "POST" || req.body.pseudo === undefined)
-        res.redirect("/?error=invalid_request")
-    res.sendfile(path.join(__dirname, "/index.html"))
-})
 
-app.get("/chat", (req, res) => {
-    res.sendfile(path.join(__dirname, "/chat.html"))
-})
+// dbPromise.then(client => {
+    // client.db("chat").collection("messages").find().sort({ _id: -1 }).limit(50).toArray
+// })
 
+// app.post("/", (req, res) => {
+//     if (req.method !== "POST" || req.body.pseudo === undefined)
+//         res.redirect("/?error=invalid_request")
+//     res.sendfile(path.join(__dirname, "/index.html"))
+// })
+//
+// app.get("/chat", (req, res) => {
+//     res.sendfile(path.join(__dirname, "/chat.html"))
+// })
+
+io.use((socket, next) => sessionParser(socket.request, socket.request.res, next))
 io.on("connection", socket => {
-    console.log("connection")
+    const author = socket.request.session.username
 
-    socket.on("message", msg => {
-        console.log("received: " + msg)
-
-        let data = new Date();
-        msg = ent.encode(msg)
-
-        socket.broadcast.emit("received", msg)
+    socket.on("send", content => {
+        const date = new Date();
+        content = ent.encode(content)
+        console.log(`[${date.toDateString()}] RECEIVED ${author}: ${content}`)
+        dbPromise.then(client => {
+            client.db("chat").collection("messages").insert({
+                "date":    date,
+                "author":  author,
+                "content": content
+            })
+        })
+        socket.broadcast.emit("received", {
+            date:    date,
+            author:  author,
+            content: content
+        })
     })
 
     socket.on("disconnect", () => {
-        console.log("disconnected")
+        console.log(`DISCONNECTED ${author}`)
     })
 })
 
-http.listen(8000, () => {
+server.listen(8000, () => {
     console.log("Listening")
 })

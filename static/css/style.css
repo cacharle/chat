@@ -1,5 +1,7 @@
 body {
-    background: grey;
+    background: #222;
+    color: #eee;
+    font-family: sans-serif;
 }
 
 ul {
@@ -12,6 +14,12 @@ ul {
 
 #messages li {
     display: flex;
+    border: solid;
+    border-width: 0;
+    border-bottom-width: 1px;
+    border-color: white;
+    margin-bottom: 10px;
+    padding: 5px;
 }
 
 .author {
@@ -28,8 +36,17 @@ footer {
 #button-send {
     width: 5em;
     font-weight: bold;
+    padding: 5px;
 }
 
 #input-message {
     width: 70%;
+    margin: 5px;
+    border-style: solid;
+    border-radius: 2px;
+    border-width: 2px;
+    border-color: #eee;
+    padding: 5px;
+    background: #222;
+    color: #eee;
 }
