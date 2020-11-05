@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/cacharle/chat#readme",
   "dependencies": {
+    "connect-mongo": "^3.2.0",
     "cookie-session": "^1.4.0",
     "ejs": "^3.1.5",
     "ent": "^2.2.0",

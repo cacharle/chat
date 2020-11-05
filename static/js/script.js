@@ -6,18 +6,24 @@ let messages = document.getElementById("messages")
 const username = document.getElementById("username").textContent
 
 function divWithClassContent(class_, content) {
-    let node = document.createElement("td")
+    let node = document.createElement("div")
     node.classList.add(class_)
     node.textContent = content
     return node
 }
 
 function addMessage(date, author, content) {
-    trNode      = document.createElement("tr")
+    trNode      = document.createElement("li")
+    let hours = date.getHours()
+    if (hours < 10)
+        hours = `0${hours}`
+    let min = date.getMinutes()
+    if (min < 10)
+        min = `0${min}`
     dateNode    = divWithClassContent(
         "date",
         `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} ` +
-        `${date.getHours()}:${date.getMinutes()}`
+        `${hours}:${min}`
     )
     authorNode  = divWithClassContent("author", author)
     contentNode = divWithClassContent("content", content)

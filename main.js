@@ -12,30 +12,38 @@ const io = require("socket.io")(server)
 const MongoClient = require("mongodb").MongoClient;
 const assert = require("assert")
 
+const MongoStore = require("connect-mongo")(session)
+
 const mongoURI = "mongodb://localhost:27017"
-// const client = new MongoClient(mongoURI)
-
 let dbPromise = MongoClient.connect(mongoURI)
-// console.log(">>", dbPromise)
-// dbPromise.then(db => console.log(">>", db.db("chat").collection("messages")))
-
 
 app.use(express.static(path.join(__dirname, "static")))
 app.use(express.urlencoded({ extended: true }))
+
+
 const sessionParser = session({
     secret: "bonjour",
     resave: true,
-    saveUninitialized: true
+    saveUninitialized: true,
+    store: new MongoStore({
+        url: mongoURI,
+        dbName: "chat",
+    })
 })
 app.use(sessionParser)
 
 app.get("/", (req, res) => {
+    if (req.session.username !== undefined)
+        res.redirect("/chat")
+    req.session.username = undefined
     res.sendFile(path.join(__dirname, "/index.html"))
 })
 
 app.post("/", (req, res) => {
-    if (req.body.username === undefined || req.body.username.length < 5 || req.body.username.length > 25)
-        res.redirect("/")
+    if (req.body.username === undefined ||
+        !/^[a-zA-Z][a-zA-Z0-9]{5,20}$/.test(req.body.username)
+    )
+        res.redirect("/?error=error")
     else {
         req.session.username = req.body.username
         res.redirect("/chat")
@@ -58,6 +66,10 @@ app.get("/chat", (req, res) => {
                             {
                                 username: req.session.username,
                                 messages: dbres.reverse()
+                                               .map(x => {
+                                                   x.content = ent.decode(x.content)
+                                                   return x
+                                               })
                             }
                         )
                   })
@@ -65,19 +77,19 @@ app.get("/chat", (req, res) => {
     }
 })
 
-
-// dbPromise.then(client => {
-    // client.db("chat").collection("messages").find().sort({ _id: -1 }).limit(50).toArray
-// })
+function log(str) {
+    console.log(`[${(new Date()).toDateString()}] ${str}`)
+}
 
 io.use((socket, next) => sessionParser(socket.request, socket.request.res, next))
 io.on("connection", socket => {
     const author = socket.request.session.username
+    log(`CONNECTED ${author}`)
 
     socket.on("send", content => {
         const date = new Date();
         content = ent.encode(content)
-        console.log(`[${date.toDateString()}] RECEIVED ${author}: ${content}`)
+        log(`RECEIVED ${author}: ${content}`)
         dbPromise.then(client => {
             client.db("chat").collection("messages").insertOne({
                 "date":    date,
@@ -88,12 +100,12 @@ io.on("connection", socket => {
         socket.broadcast.emit("received", {
             date:    date,
             author:  author,
-            content: content
+            content: ent.decode(content)
         })
     })
 
     socket.on("disconnect", () => {
-        console.log(`DISCONNECTED ${author}`)
+        log(`DISCONNECTED ${author}`)
     })
 })
 

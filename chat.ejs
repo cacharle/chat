@@ -1,33 +1,41 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>cacharle</title>
+        <title>chat</title>
         <link rel="stylesheet" type="text/css" href="css/style.css"/>
+        <link rel="icon" type="image/png" href="image/favicon.png" />
         <meta charset="utf-8"/>
-        <%// <link rel="icon" type="image/png" href="image/favicon.png" /> %>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
-
 
     <body>
         <div id="username" hidden><%= username %></div>
-        <table id="messages">
+        <ul id="messages">
             <% messages.forEach(message => { %>
-                <tr>
-                    <td class="date">
-                        <% let d = message.date %>
+                <li>
+                    <div class="date">
+                        <%
+                            let d = message.date
+                            let hours = d.getHours()
+                            if (hours < 10)
+                                hours = `0${hours}`
+                            let min = d.getMinutes()
+                            if (min < 10)
+                                min = `0${min}`
+                        %>
                         <%= `${d.getDate()}/${d.getMonth()}/${d.getFullYear()} ` +
-                            `${d.getHours()}:${d.getMinutes()}` %>
-                    </td>
-                    <td class="author">  <%= message.author %>  </td>
-                    <td class="content"> <%= message.content %> </td>
-                </tr>
+                            `${hours}:${min}` %>
+                    </div>
+                    <div class="author"><%= message.author %></div>
+                    <div class="content"><%= message.content %></div>
+                </li>
             <% }) %>
-        </table>
+        </ul>
 
-        <footer>
+        <div id="input-box">
             <input id="input-message" type="text"/>
-            <button id="button-send">Send</button>
-        </footer>
+            <img src="image/send.svg" alt="send" id="button-send"/>
+        </div>
 
         <script src="/socket.io/socket.io.js"></script>
         <script type="text/javascript" src="js/script.js"></script>
