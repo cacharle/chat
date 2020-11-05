@@ -3,31 +3,48 @@ let socket = io()
 let input = document.getElementById("input-message")
 let messages = document.getElementById("messages")
 
-function addMessage(author, content) {
-    liNode      = document.createElement("li")
-    authorNode  = document.createElement("div")
-    contentNode = document.createElement("div")
-    authorNode.classList.add("author")
-    contentNode.classList.add("content")
-    authorNode.textContent = author
-    contentNode.textContent = content
-    liNode.appendChild(authorNode)
-    liNode.appendChild(contentNode)
-    messages.appendChild(liNode)
+const username = document.getElementById("username").textContent
+
+function divWithClassContent(class_, content) {
+    let node = document.createElement("td")
+    node.classList.add(class_)
+    node.textContent = content
+    return node
+}
+
+function addMessage(date, author, content) {
+    trNode      = document.createElement("tr")
+    dateNode    = divWithClassContent(
+        "date",
+        `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} ` +
+        `${date.getHours()}:${date.getMinutes()}`
+    )
+    authorNode  = divWithClassContent("author", author)
+    contentNode = divWithClassContent("content", content)
+    trNode.appendChild(dateNode)
+    trNode.appendChild(authorNode)
+    trNode.appendChild(contentNode)
+    messages.appendChild(trNode)
 }
 
 function send() {
-    const author = "user"
     const content = input.value
     if (content === "")
         return
     input.value = ""
     socket.emit("send", content)
-    addMessage(author, content)
+    addMessage(new Date(), username, content)
+    window.scrollTo(0, document.body.scrollHeight)
 }
 
 socket.on("received", data => {
-    addMessage(data.author, data.content)
+    scrolled = document.documentElement
+    console.log(scrolled.scrollTop)
+    console.log(scrolled.scrollHeight - scrolled.clientHeight)
+    const shouldScroll = scrolled.scrollTop >= scrolled.scrollHeight - scrolled.clientHeight - 100
+    addMessage(new Date(data.date), data.author, data.content)
+    if (shouldScroll)
+        window.scrollTo(0, document.body.scrollHeight)
 })
 
 document.getElementById("button-send").addEventListener("click", send)
@@ -35,3 +52,5 @@ document.addEventListener("keydown", event => {
     if (event.key === "Enter")
         send()
 })
+
+window.scrollTo(0, document.body.scrollHeight)

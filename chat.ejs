@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>cacharle</title>
+        <link rel="stylesheet" type="text/css" href="css/style.css"/>
+        <meta charset="utf-8"/>
+        <%// <link rel="icon" type="image/png" href="image/favicon.png" /> %>
+    </head>
+
+
+    <body>
+        <div id="username" hidden><%= username %></div>
+        <table id="messages">
+            <% messages.forEach(message => { %>
+                <tr>
+                    <td class="date">
+                        <% let d = message.date %>
+                        <%= `${d.getDate()}/${d.getMonth()}/${d.getFullYear()} ` +
+                            `${d.getHours()}:${d.getMinutes()}` %>
+                    </td>
+                    <td class="author">  <%= message.author %>  </td>
+                    <td class="content"> <%= message.content %> </td>
+                </tr>
+            <% }) %>
+        </table>
+
+        <footer>
+            <input id="input-message" type="text"/>
+            <button id="button-send">Send</button>
+        </footer>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="js/script.js"></script>
+    </body>
+</html>

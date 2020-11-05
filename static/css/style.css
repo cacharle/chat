@@ -2,6 +2,7 @@ body {
     background: #222;
     color: #eee;
     font-family: sans-serif;
+    margin: 0;
 }
 
 ul {
@@ -10,20 +11,37 @@ ul {
 
 #messages {
     padding: 0;
+    margin-bottom: 5em;
+    border-spacing: 0;
+    border-collapse: collapse;
 }
 
-#messages li {
-    display: flex;
-    border: solid;
-    border-width: 0;
-    border-bottom-width: 1px;
-    border-color: white;
-    margin-bottom: 10px;
+#messages tr {
+    /* display: flex; */
+    /* align-items: center; */
+    border-bottom: 1px solid #444;
+    /* border: solid; */
+    /* border-width: 0; */
+    /* border-bottom-width: 1px; */
+    /* border-color: #fff; */
+}
+
+td {
     padding: 5px;
+    padding-top: 10px;
 }
 
 .author {
     margin-right: 15px;
+    font-weight: bold;
+    font-size: 1.1em;
+    text-align: right;
+}
+
+.date {
+    margin-right: 15px;
+    font-size: 0.75em;
+    white-space: nowrap;
 }
 
 footer {

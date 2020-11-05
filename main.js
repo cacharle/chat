@@ -21,7 +21,7 @@ let dbPromise = MongoClient.connect(mongoURI)
 
 
 app.use(express.static(path.join(__dirname, "static")))
-// app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({ extended: true }))
 const sessionParser = session({
     secret: "bonjour",
     resave: true,
@@ -30,23 +30,44 @@ const sessionParser = session({
 app.use(sessionParser)
 
 app.get("/", (req, res) => {
-    req.session.username = "user"
     res.sendFile(path.join(__dirname, "/index.html"))
+})
+
+app.post("/", (req, res) => {
+    if (req.body.username === undefined || req.body.username.length < 5 || req.body.username.length > 25)
+        res.redirect("/")
+    else {
+        req.session.username = req.body.username
+        res.redirect("/chat")
+    }
+})
+
+app.get("/chat", (req, res) => {
+    if (req.session.username === undefined)
+        res.redirect("/")
+    else {
+        dbPromise.then(client => {
+            client.db("chat")
+                  .collection("messages")
+                  .find()
+                  .sort({ _id: -1 })
+                  // .limit(50)
+                  .toArray((err, dbres) => {
+                        res.render(
+                            path.join(__dirname, "/chat.ejs"),
+                            {
+                                username: req.session.username,
+                                messages: dbres.reverse()
+                            }
+                        )
+                  })
+        })
+    }
 })
 
 
 // dbPromise.then(client => {
     // client.db("chat").collection("messages").find().sort({ _id: -1 }).limit(50).toArray
-// })
-
-// app.post("/", (req, res) => {
-//     if (req.method !== "POST" || req.body.pseudo === undefined)
-//         res.redirect("/?error=invalid_request")
-//     res.sendfile(path.join(__dirname, "/index.html"))
-// })
-//
-// app.get("/chat", (req, res) => {
-//     res.sendfile(path.join(__dirname, "/chat.html"))
 // })
 
 io.use((socket, next) => sessionParser(socket.request, socket.request.res, next))
@@ -58,7 +79,7 @@ io.on("connection", socket => {
         content = ent.encode(content)
         console.log(`[${date.toDateString()}] RECEIVED ${author}: ${content}`)
         dbPromise.then(client => {
-            client.db("chat").collection("messages").insert({
+            client.db("chat").collection("messages").insertOne({
                 "date":    date,
                 "author":  author,
                 "content": content
